@@ -1,10 +1,8 @@
 {
-  "actorSpecification": 1,
-  "name": "trademe-marketplace-scraper-input",
   "title": "Trade Me NZ Marketplace Scraper input",
   "description": "Search terms, filters and limits.",
-  "version": "1.0",
   "schemaVersion": 1,
+  "type": "object",
   "properties": {
     "queries": {
       "title": "Search terms",
@@ -22,7 +20,13 @@
       "prefill": [],
       "items": {
         "type": "object",
-        "properties": { "url": { "type": "string" } }
+        "properties": {
+          "url": {
+            "title": "URL",
+            "type": "string",
+            "description": "Trade Me URL"
+          }
+        }
       }
     },
     "category": {
@@ -52,11 +56,13 @@
     "minPrice": {
       "title": "Minimum price (NZD)",
       "type": "integer",
+      "description": "Lowest price in NZD. Applied server-side.",
       "minimum": 0
     },
     "maxPrice": {
       "title": "Maximum price (NZD)",
       "type": "integer",
+      "description": "Highest price in NZD. Applied server-side.",
       "minimum": 0
     },
     "condition": {
@@ -86,6 +92,7 @@
     "sort": {
       "title": "Sort order",
       "type": "string",
+      "description": "Result ordering passed to Trade Me.",
       "editor": "select",
       "default": "default",
       "enum": [

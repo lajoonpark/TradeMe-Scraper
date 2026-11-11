@@ -8,7 +8,7 @@
   "meta": {
     "templateId": "project-empty"
   },
-  "dockerfile": "../Dockerfile",
+  "dockerfile": "./Dockerfile",
   "input": "./INPUT_SCHEMA.json",
   "storages": {
     "dataset": {
