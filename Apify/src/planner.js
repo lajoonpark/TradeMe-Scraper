@@ -24,19 +24,29 @@ function buildBase(descriptor, input, ids) {
   if (ids.district ?? descriptor.params.district) params.district = ids.district ?? descriptor.params.district;
   if (ids.suburb ?? descriptor.params.suburb) params.suburb = ids.suburb ?? descriptor.params.suburb;
 
-  const minPrice = input.minPrice ?? descriptor.params.price_min;
-  const maxPrice = input.maxPrice ?? descriptor.params.price_max;
+  const minPrice =
+    input.minPrice !== null && input.minPrice !== undefined && input.minPrice !== ''
+      ? input.minPrice
+      : descriptor.params.price_min;
+  const maxPrice =
+    input.maxPrice !== null && input.maxPrice !== undefined && input.maxPrice !== ''
+      ? input.maxPrice
+      : descriptor.params.price_max;
   if (minPrice !== null && minPrice !== undefined && minPrice !== '') params.price_min = Number(minPrice);
   if (maxPrice !== null && maxPrice !== undefined && maxPrice !== '') params.price_max = Number(maxPrice);
 
-  const condition = CONDITIONS[input.condition ?? ''] ?? descriptor.params.condition ?? '';
+  // An empty/default run filter must not clobber a filter carried by the URL.
+  const condition = CONDITIONS[input.condition ?? ''] ?? '';
   if (condition) params.condition = condition;
+  else if (descriptor.params.condition) params.condition = descriptor.params.condition;
 
-  const shipping = SHIPPING_METHODS[input.shippingMethod ?? ''] ?? descriptor.params.shipping_method ?? '';
+  const shipping = SHIPPING_METHODS[input.shippingMethod ?? ''] ?? '';
   if (shipping) params.shipping_method = shipping;
+  else if (descriptor.params.shipping_method) params.shipping_method = descriptor.params.shipping_method;
 
-  const sort = SORTS[input.sort ?? ''] ?? descriptor.params.sort_order ?? '';
-  if (sort) params.sort_order = sort;
+  const sort = SORTS[input.sort ?? ''] ?? '';
+  if (sort && (sort !== SORTS.default || !descriptor.params.sort_order)) params.sort_order = sort;
+  else if (descriptor.params.sort_order) params.sort_order = descriptor.params.sort_order;
 
   return params;
 }
@@ -82,9 +92,9 @@ function priceBands(params) {
   });
 }
 
-function pagesFor(total, maxPages) {
+function pagesFor(total, maxPages, rowSize = MAX_ROWS) {
   const cap = Math.min(maxPages ?? MAX_PAGES_PER_QUERY, MAX_PAGES_PER_QUERY);
-  return Math.max(1, Math.min(Math.ceil(total / MAX_ROWS), cap));
+  return Math.max(1, Math.min(Math.ceil(total / rowSize), cap));
 }
 
 /**
@@ -92,7 +102,10 @@ function pagesFor(total, maxPages) {
  */
 export async function planQuery(client, descriptor, input, { semaphore, signal, maxPages } = {}) {
   const ids = {
-    category: await resolveCategoryId(client, descriptor.categorySegments || []),
+    category:
+      (await resolveCategoryId(client, descriptor.categorySegments || [])) ??
+      (input.category ? String(input.category).replace(/^\/+|\/+$/g, '') : null) ??
+      (descriptor.params.category ? String(descriptor.params.category) : null),
     region: await resolveRegion(client, input.region ?? descriptor.params.region),
     district: input.district ?? descriptor.params.district,
     suburb: input.suburb ?? descriptor.params.suburb,
@@ -131,11 +144,15 @@ export async function planQuery(client, descriptor, input, { semaphore, signal, 
 
   const pages = [];
   let truncated = sharded;
+  // Small runs don't need 500-row pages; keep every page at the same size so
+  // the page offsets stay aligned.
+  const wanted = Number(input.maxItems);
+  const rowSize = Number.isFinite(wanted) && wanted > 0 && wanted < MAX_ROWS ? Math.max(1, wanted + 25) : MAX_ROWS;
   for (const slice of slices) {
-    const slicePages = slice.total === null ? (maxPages ?? MAX_PAGES_PER_QUERY) : pagesFor(slice.total, maxPages);
-    if (slice.total !== null && slice.total > MAX_ROWS * slicePages) truncated = true;
+    const slicePages = slice.total === null ? (maxPages ?? MAX_PAGES_PER_QUERY) : pagesFor(slice.total, maxPages, rowSize);
+    if (slice.total !== null && slice.total > rowSize * slicePages) truncated = true;
     for (let page = 1; page <= slicePages; page += 1) {
-      pages.push({ ...slice.params, rows: MAX_ROWS, page });
+      pages.push({ ...slice.params, rows: rowSize, page });
     }
   }
 

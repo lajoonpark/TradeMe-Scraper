@@ -51,9 +51,10 @@ export const SORTS = Object.freeze({
   latest: 'latestlisting',
 });
 
-/** Condition maps onto the API's own vocabulary. */
+/** Condition maps onto the API's own vocabulary. `any` means unset. */
 export const CONDITIONS = Object.freeze({
   '': '',
+  any: '',
   new: 'new',
   used: 'used',
 });
@@ -61,6 +62,7 @@ export const CONDITIONS = Object.freeze({
 /** shipping_method is server-side; buy-now is not (filtered client-side). */
 export const SHIPPING_METHODS = Object.freeze({
   '': '',
+  any: '',
   free: 'free',
   pickup: 'pickup',
 });

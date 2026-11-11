@@ -102,7 +102,8 @@ export function normalise(row, detail) {
 
   const buyNow = num(source.BuyNowPrice);
   const start = num(source.StartPrice);
-  const price = source.HasBuyNow && buyNow ? buyNow : buyNow || start || null;
+  const hasBuyNow = bool(source.HasBuyNow);
+  const price = hasBuyNow && buyNow ? buyNow : start || buyNow || null;
 
   const shipping = shipFrom(source.ShippingOptions);
 

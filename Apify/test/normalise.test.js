@@ -44,6 +44,11 @@ test('price falls back to start price, then null', () => {
   assert.equal(normalise({ ...row, HasBuyNow: false, BuyNowPrice: 0, StartPrice: 0 }, null).price, null);
 });
 
+test('price ignores a lingering Buy Now price when Buy Now is off', () => {
+  const record = normalise({ ...row, HasBuyNow: false, BuyNowPrice: 120, StartPrice: 40 }, null);
+  assert.equal(record.price, 40);
+});
+
 test('shipping flags derive from option types', () => {
   const free = normalise({ ...row, ShippingOptions: [{ Type: 3, Price: 0 }, { Type: 2, Price: 0 }] }, null);
   assert.equal(free.shipping.free, true);

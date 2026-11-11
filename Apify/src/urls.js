@@ -89,7 +89,7 @@ export function parseInput(raw) {
 
   const params = {};
   const searchString = url.searchParams.get('search_string') || '';
-  for (const name of ['price_min', 'price_max', 'condition', 'shipping_method', 'sort_order']) {
+  for (const name of ['category', 'price_min', 'price_max', 'condition', 'shipping_method', 'sort_order']) {
     const value = url.searchParams.get(name);
     if (value) params[name] = value;
   }

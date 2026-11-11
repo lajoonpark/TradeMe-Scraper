@@ -120,6 +120,41 @@ test('applies run filters over descriptor params', async () => {
   assert.equal(page.sort_order, 'priceasc');
 });
 
+test('uses the top-level category when the descriptor has none', async () => {
+  const plan = await planQuery(fakeClient(), descriptor(), { category: '0344-0422-' }, {});
+  assert.equal(plan.pages[0].category, '0344-0422-');
+});
+
+test('a URL category wins over the top-level category', async () => {
+  const plan = await planQuery(
+    fakeClient(),
+    descriptor({ categorySegments: ['computers', 'laptops'] }),
+    { category: '0344-0422-' },
+    {},
+  );
+  assert.equal(plan.pages[0].category, '0002-9844-');
+});
+
+test('default run filters do not clobber URL filters', async () => {
+  const plan = await planQuery(
+    fakeClient(),
+    descriptor({ params: { price_max: '50', condition: 'new', shipping_method: 'pickup', sort_order: 'latestlisting' } }),
+    { condition: 'any', shippingMethod: 'any', sort: 'default' },
+    {},
+  );
+  const page = plan.pages[0];
+  assert.equal(page.price_max, 50);
+  assert.equal(page.condition, 'new');
+  assert.equal(page.shipping_method, 'pickup');
+  assert.equal(page.sort_order, 'latestlisting');
+});
+
+test('uses smaller pages for small maxItems runs', async () => {
+  const plan = await planQuery(fakeClient({ total: 1200 }), descriptor(), { maxItems: 10 }, {});
+  assert.ok(plan.pages.every((page) => page.rows === 35));
+  assert.equal(plan.pages.length, Math.ceil(1200 / 35));
+});
+
 test('empty searches throw a clear error', async () => {
   await assert.rejects(
     planQuery(fakeClient(), descriptor({ searchString: '', categorySegments: [] }), {}, {}),

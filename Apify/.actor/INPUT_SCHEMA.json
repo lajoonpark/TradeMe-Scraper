@@ -15,19 +15,10 @@
     "startUrls": {
       "title": "Start URLs",
       "type": "array",
-      "description": "Trade Me search, category or listing URLs. Listing URLs and bare IDs are always fetched in full.",
-      "editor": "requestListSources",
+      "description": "Trade Me search, category or listing URLs, or bare numeric listing IDs. Listing URLs and IDs are always fetched in full.",
+      "editor": "stringList",
       "prefill": [],
-      "items": {
-        "type": "object",
-        "properties": {
-          "url": {
-            "title": "URL",
-            "type": "string",
-            "description": "Trade Me URL"
-          }
-        }
-      }
+      "items": { "type": "string" }
     },
     "category": {
       "title": "Category ID",
@@ -70,8 +61,8 @@
       "type": "string",
       "description": "Filter by item condition. Server-side.",
       "editor": "select",
-      "default": "",
-      "enum": ["", "new", "used"],
+      "default": "any",
+      "enum": ["any", "new", "used"],
       "enumTitles": ["Any", "New", "Used"]
     },
     "shippingMethod": {
@@ -79,8 +70,8 @@
       "type": "string",
       "description": "Filter by shipping method. Server-side.",
       "editor": "select",
-      "default": "",
-      "enum": ["", "free", "pickup"],
+      "default": "any",
+      "enum": ["any", "free", "pickup"],
       "enumTitles": ["Any", "Free shipping", "Pickup available"]
     },
     "buyNowOnly": {
@@ -158,7 +149,7 @@
       "type": "object",
       "description": "Datacenter proxy is sufficient. Switch to residential only if requests start being refused.",
       "editor": "proxy",
-      "default": { "useApifyProxy": true, "apifyProxyGroups": ["SHADER"] }
+      "default": { "useApifyProxy": true }
     }
   },
   "required": []

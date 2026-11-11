@@ -10,7 +10,11 @@ const slug = (value) =>
     .toLowerCase()
     .replace(/&/g, 'and')
     .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '');
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '')
+    // The web paths use /a/motors, /a/property and /a/jobs, while the tree
+    // names those roots "Trade Me Motors" etc.
+    .replace(/^trade-me-/, '');
 
 let categoryCache;
 

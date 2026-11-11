@@ -1,6 +1,6 @@
 import { Actor, log } from 'apify';
 import { createHash } from 'node:crypto';
-import { ENDPOINTS, LIMITS } from './constants.js';
+import { ENDPOINTS, LIMITS, MAX_ROWS } from './constants.js';
 import { getJson, Semaphore, closeAgent, setProxy, AuthError } from './http.js';
 import { parseInput, dedupeDescriptors } from './urls.js';
 import { planQuery } from './planner.js';
@@ -11,8 +11,8 @@ const DEFAULTS = {
   fetchDetails: true,
   buyNowOnly: false,
   sort: 'default',
-  condition: '',
-  shippingMethod: '',
+  condition: 'any',
+  shippingMethod: 'any',
 };
 
 function client(semaphore) {
@@ -36,6 +36,9 @@ function collectDescriptors(input) {
 
   const queries = (Array.isArray(input.queries) ? input.queries : []).filter(Boolean);
   const sharedParams = {};
+  if (input.category !== undefined && input.category !== null && String(input.category).trim() !== '') {
+    sharedParams.category = String(input.category).trim().replace(/^\/+|\/+$/g, '');
+  }
   for (const name of ['price_min', 'price_max', 'condition', 'shipping_method', 'sort_order']) {
     if (input[name] !== undefined && input[name] !== '') sharedParams[name] = input[name];
   }
@@ -47,6 +50,17 @@ function collectDescriptors(input) {
       categorySegments: [],
       params: { ...sharedParams },
       url: `query:${query}`,
+    });
+  }
+
+  // A category or region on its own is a valid scope: scrape that slice.
+  if (!descriptors.length && (sharedParams.category || input.region)) {
+    descriptors.push({
+      kind: 'search',
+      searchString: '',
+      categorySegments: [],
+      params: { ...sharedParams },
+      url: `scope:${sharedParams.category ?? ''}${input.region ? ` region=${input.region}` : ''}`,
     });
   }
 
@@ -182,31 +196,77 @@ export async function run(rawInput, { pushData, setStatusMessage, proxyUrl } = {
       log.warning(`Query "${plan.label}" was sharded/truncated to stay under the page ceiling.`);
     }
 
-    // No slot is held while rows are processed: api.get acquires and releases
-    // its own slot, so detail requests can never starve behind page handlers.
-    await Promise.all(
-      plan.pages.map(async (params) => {
-        if (controller.signal.aborted) return;
-        const page = await api.get(ENDPOINTS.search, { params, signal: controller.signal });
-        if (!page?.List?.length) return;
-
-        for (const row of page.List) {
-          if (controller.signal.aborted) break;
-          scanned += 1;
-          if (!row.ListingId) continue;
-
-          if (input.fetchDetails) {
-            const detail = await api
-              .get(ENDPOINTS.listing(row.ListingId), { signal: controller.signal })
-              .catch(() => null);
-            if (!detail) continue;
-            await emit(row, detail);
-          } else {
-            await emit(row, null);
-          }
-        }
-      }),
+    // No slot is held while rows are processed: every api.get acquires and
+    // releases its own slot. Keep a bounded lookahead of pages in flight and
+    // consume them in page order, so `sort: latest` plus a small `maxItems`
+    // still yields the newest rows without buffering a whole query. Small runs
+    // keep the lookahead small so they don't pull megabytes they won't use.
+    const lookahead = Math.max(
+      1,
+      Math.min(
+        16,
+        plan.pages.length,
+        maxItems === Infinity ? plan.pages.length : Math.ceil((maxItems / MAX_ROWS) * 2) + 1,
+      ),
     );
+    const pending = [];
+    let nextPage = 0;
+
+    for (let index = 0; index < plan.pages.length; index += 1) {
+      while (pending.length < lookahead && nextPage < plan.pages.length) {
+        const params = plan.pages[nextPage];
+        nextPage += 1;
+        pending.push(
+          api.get(ENDPOINTS.search, { params, signal: controller.signal }).then(
+            (page) => ({ page }),
+            (error) => ({ error }),
+          ),
+        );
+      }
+
+      if (controller.signal.aborted) break;
+      const { page, error } = await pending.shift();
+      if (error) {
+        if (controller.signal.aborted) break;
+        throw error;
+      }
+      if (!page?.List?.length) continue;
+
+      // No point fetching details for a whole page when only a few rows can
+      // still be pushed. The +25 buffer covers client-side filtering.
+      const wanted =
+        maxItems === Infinity
+          ? page.List.length
+          : Math.min(page.List.length, Math.max(0, maxItems - pushed) + 25);
+      if (wanted === 0) break;
+      const rows = page.List.slice(0, wanted);
+
+      // Fetch the page's details concurrently, but emit them in row order.
+      const details = input.fetchDetails
+        ? await Promise.all(
+            rows.map((row) =>
+              row.ListingId
+                ? api.get(ENDPOINTS.listing(row.ListingId), { signal: controller.signal }).catch(() => null)
+                : null,
+            ),
+          )
+        : null;
+
+      for (let rowIndex = 0; rowIndex < rows.length; rowIndex += 1) {
+        if (controller.signal.aborted) break;
+        const row = rows[rowIndex];
+        scanned += 1;
+        if (!row.ListingId) continue;
+
+        if (input.fetchDetails) {
+          const detail = details[rowIndex];
+          if (!detail) continue;
+          await emit(row, detail);
+        } else {
+          await emit(row, null);
+        }
+      }
+    }
   }
 
   let failure = null;

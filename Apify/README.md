@@ -24,14 +24,15 @@ refresh logic. `src/constants.js` holds the header set; if the gate ever changes
 that file is the one place to edit and `AuthError` will surface it loudly.
 
 Measured on 2026-11-11: 300 concurrent search requests all returned `200` in
-5.6s and the API sent no rate-limit headers back. Datacenter IPs work, so Apify
-proxy group `SHADER` is enough — residential is not needed.
+5.6s and the API sent no rate-limit headers back. Datacenter IPs work, so the
+default Apify datacenter proxy (`useApifyProxy`, `auto` group) is enough —
+residential is not needed.
 
 ## Install and run
 
 ```bash
 npm install
-npm test                                        # 21 unit tests, no network
+npm test                                        # 27 unit tests, no network
 
 # live smoke test, no Apify platform needed
 OUT=out.ndjson node test/run-local.js '{"queries":["iphone 13"],"maxItems":5}'
@@ -48,18 +49,18 @@ On the Apify platform, push with `apify push` and run from the console or API.
 | --- | --- | --- | --- |
 | `queries` | string[] | `["iphone 13"]` | Keywords. Each is walked to its last page. |
 | `startUrls` | `{url}`[] | — | Search, category or listing URLs. An input with `/a/motors/...` still resolves through the marketplace endpoint. |
-| `category` | string | — | Category number, e.g. `0344-0422-`. |
+| `category` | string | — | Category number, e.g. `0344-0422-`. On its own it is a valid scope. |
 | `region` / `district` / `suburb` | string | — | Name or numeric ID. |
 | `minPrice` / `maxPrice` | integer | — | NZD. |
-| `condition` | `""` \| `new` \| `used` | `""` | Server-side. |
-| `shippingMethod` | `""` \| `free` \| `pickup` | `""` | Server-side. |
+| `condition` | `any` \| `new` \| `used` | `any` | Server-side. |
+| `shippingMethod` | `any` \| `free` \| `pickup` | `any` | Server-side. |
 | `buyNowOnly` | boolean | `false` | **Client-side** — see below. |
 | `sort` | enum | `default` | `latest` is the one to use for polling. |
 | `maxItems` | integer | `200` | Hard stop. `0` = unlimited. |
 | `maxPagesPerQuery` | integer | `190` | Server caps at 190 pages × 500 rows. |
 | `fetchDetails` | boolean | `true` | Adds description, full gallery, attributes. One request per listing. |
 | `incrementalMode` / `stateKey` | boolean / string | `false` / — | Scheduled-run mode, see below. |
-| `proxy` | object | datacenter | `SHADER` group. |
+| `proxy` | object | datacenter | `auto` group. |
 
 `buyNowOnly` has no server-side equivalent — `buy_now_only`, `buy_now` and
 `has_buy_now` all return unfiltered totals — so it is applied after normalising
@@ -115,7 +116,7 @@ tombstones are not emitted; a listing that disappears simply stops appearing.
 
 ## Tests
 
-`npm test` covers URL parsing, normalisation (dates, prices, shipping types,
+`npm test` covers URL parsing, category/region resolution, normalisation (dates, prices, shipping types,
 sentinels), and the planner (caps, sharding, filter precedence) against fixtures
 captured from the live API. Fixtures live in `test/fixtures/`.
 

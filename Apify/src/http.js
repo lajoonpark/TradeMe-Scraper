@@ -22,10 +22,20 @@ const agent = new Agent({
 });
 
 let dispatcher = agent;
+let proxyDispatcher = null;
 
 /** Points the client at an Apify Proxy URL, or back at the direct agent. */
 export function setProxy(proxyUrl) {
-  dispatcher = proxyUrl ? new ProxyAgent({ uri: proxyUrl, connections: LIMITS.concurrency + 20 }) : agent;
+  if (proxyDispatcher) {
+    proxyDispatcher.close().catch(() => {});
+    proxyDispatcher = null;
+  }
+  if (proxyUrl) {
+    proxyDispatcher = new ProxyAgent({ uri: proxyUrl, connections: LIMITS.concurrency + 20 });
+    dispatcher = proxyDispatcher;
+  } else {
+    dispatcher = agent;
+  }
 }
 
 /** Counting semaphore — bounds in-flight requests without a queue dependency. */
@@ -97,7 +107,9 @@ async function getOnce(target, signal) {
       res = await request(target, {
         method: 'GET',
         dispatcher,
-        headers: REQUIRED_HEADERS,
+        // Undici's ProxyAgent mutates the headers object (it adds `host`), so
+        // hand it a copy — REQUIRED_HEADERS is frozen.
+        headers: { ...REQUIRED_HEADERS },
         signal,
       });
     } catch (error) {
@@ -141,5 +153,5 @@ async function getOnce(target, signal) {
 }
 
 export async function closeAgent() {
-  await agent.close();
+  await Promise.allSettled([agent.close(), ...(proxyDispatcher ? [proxyDispatcher.close()] : [])]);
 }

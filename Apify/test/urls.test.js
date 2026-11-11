@@ -19,10 +19,11 @@ test('listing URLs become listing descriptors', () => {
 });
 
 test('search URLs keep keyword, category path and filters', () => {
-  const descriptor = parseInput('https://www.trademe.co.nz/a/marketplace/computers/laptops?search_string=macbook&price_max=900&sort_order=priceasc');
+  const descriptor = parseInput('https://www.trademe.co.nz/a/marketplace/computers/laptops?search_string=macbook&category=0002-9844-&price_max=900&sort_order=priceasc');
   assert.equal(descriptor.kind, 'search');
   assert.equal(descriptor.searchString, 'macbook');
   assert.deepEqual(descriptor.categorySegments, ['computers', 'laptops']);
+  assert.equal(descriptor.params.category, '0002-9844-');
   assert.equal(descriptor.params.price_max, '900');
   assert.equal(descriptor.params.sort_order, 'priceasc');
 });
