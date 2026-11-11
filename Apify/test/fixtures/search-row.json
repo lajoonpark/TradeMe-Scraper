@@ -1,0 +1,25 @@
+{
+ "ListingId": 6224709936,
+ "Title": "macbook Pro 15\"",
+ "Category": "0002-0356-0807-",
+ "CategoryPath": "/Computers/Laptops/Other",
+ "Region": "Marlborough",
+ "Suburb": "Blenheim",
+ "StartPrice": 400.0,
+ "BuyNowPrice": null,
+ "HasBuyNow": null,
+ "IsBuyNowOnly": null,
+ "ReserveState": null,
+ "BidCount": null,
+ "MaxBidAmount": null,
+ "ViewCount": null,
+ "MemberId": 1650467,
+ "StartDate": "/Date(1794370134623)/",
+ "EndDate": "/Date(1795230054423)/",
+ "PictureHref": "https://trademe.tmcdn.co.nz/photoserver/thumb/2341401190.jpg",
+ "ShippingDetails": {
+  "SuggestedShipping": {
+   "Price": 0
+  }
+ }
+}

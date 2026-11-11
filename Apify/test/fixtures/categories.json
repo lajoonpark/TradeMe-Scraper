@@ -1,0 +1,30 @@
+{
+ "Name": "Root",
+ "Number": "",
+ "Subcategories": [
+  {
+   "Name": "Mobile phones",
+   "Number": "0344-",
+   "Subcategories": [
+    {
+     "Name": "iPhone",
+     "Number": "0344-0422-"
+    }
+   ]
+  },
+  {
+   "Name": "Computers",
+   "Number": "0002-",
+   "Subcategories": [
+    {
+     "Name": "Laptops",
+     "Number": "0002-9844-"
+    }
+   ]
+  },
+  {
+   "Name": "Trade Me Property",
+   "Number": "0350-"
+  }
+ ]
+}

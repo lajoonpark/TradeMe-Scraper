@@ -1,0 +1,202 @@
+{
+ "ListingId": 6224346211,
+ "Title": "2019 Apple MacBook Pro 16\"",
+ "Subtitle": null,
+ "Category": "0002-0356-0032-2273-",
+ "CategoryPath": "/Computers/Laptops/Laptops/Apple",
+ "Region": "Wellington",
+ "Suburb": "Wellington City",
+ "StartPrice": 0.0,
+ "BuyNowPrice": 700.0,
+ "WasPrice": null,
+ "PercentageOff": null,
+ "PriceDisplay": "$700.00",
+ "HasBuyNow": true,
+ "IsBuyNowOnly": true,
+ "ReserveState": 3,
+ "BidCount": null,
+ "MaxBidAmount": null,
+ "ViewCount": 70,
+ "BidderAndWatchers": 42,
+ "QuantityRemaining": 1,
+ "AvailableToBuy": "1",
+ "MemberId": null,
+ "StartDate": "/Date(1794351629333)/",
+ "EndDate": "/Date(1794956428953)/",
+ "PictureHref": null,
+ "ShippingOptions": [
+  {
+   "Type": 3,
+   "Price": 0,
+   "Method": "Free shipping within New Zealand",
+   "ShippingId": 3
+  },
+  {
+   "Type": 2,
+   "Price": 0,
+   "Method": "I intend to pick-up",
+   "ShippingId": 2
+  }
+ ],
+ "PaymentMethods": [
+  {
+   "Id": 4,
+   "Name": "Cash",
+   "IsMandatory": false
+  },
+  {
+   "Id": 32,
+   "Name": "Ping",
+   "LogoUrl": "http://trademe.tmcdn.co.nz/Images/Payments/ping-logo.svg",
+   "IsMandatory": false
+  }
+ ],
+ "AllowsPickups": 1,
+ "Store": null,
+ "Photos": [
+  {
+   "Key": 2326122468,
+   "Value": {
+    "Thumbnail": "https://trademe.tmcdn.co.nz/photoserver/thumb/2326122468.jpg",
+    "List": "https://trademe.tmcdn.co.nz/photoserver/lv2/2326122468.jpg",
+    "Medium": "https://trademe.tmcdn.co.nz/photoserver/med/2326122468.jpg",
+    "Gallery": "https://trademe.tmcdn.co.nz/photoserver/gv/2326122468.jpg",
+    "Large": "https://trademe.tmcdn.co.nz/photoserver/tq/2326122468.jpg",
+    "FullSize": "https://trademe.tmcdn.co.nz/photoserver/full/2326122468.jpg",
+    "PlusSize": "https://trademe.tmcdn.co.nz/photoserver/plus/2326122468.jpg",
+    "PhotoId": 2326122468
+   }
+  },
+  {
+   "Key": 2326122140,
+   "Value": {
+    "Thumbnail": "https://trademe.tmcdn.co.nz/photoserver/thumb/2326122140.jpg",
+    "List": "https://trademe.tmcdn.co.nz/photoserver/lv2/2326122140.jpg",
+    "Medium": "https://trademe.tmcdn.co.nz/photoserver/med/2326122140.jpg",
+    "Gallery": "https://trademe.tmcdn.co.nz/photoserver/gv/2326122140.jpg",
+    "Large": "https://trademe.tmcdn.co.nz/photoserver/tq/2326122140.jpg",
+    "FullSize": "https://trademe.tmcdn.co.nz/photoserver/full/2326122140.jpg",
+    "PlusSize": "https://trademe.tmcdn.co.nz/photoserver/plus/2326122140.jpg",
+    "PhotoId": 2326122140
+   }
+  },
+  {
+   "Key": 2326122174,
+   "Value": {
+    "Thumbnail": "https://trademe.tmcdn.co.nz/photoserver/thumb/2326122174.jpg",
+    "List": "https://trademe.tmcdn.co.nz/photoserver/lv2/2326122174.jpg",
+    "Medium": "https://trademe.tmcdn.co.nz/photoserver/med/2326122174.jpg",
+    "Gallery": "https://trademe.tmcdn.co.nz/photoserver/gv/2326122174.jpg",
+    "Large": "https://trademe.tmcdn.co.nz/photoserver/tq/2326122174.jpg",
+    "FullSize": "https://trademe.tmcdn.co.nz/photoserver/full/2326122174.jpg",
+    "PlusSize": "https://trademe.tmcdn.co.nz/photoserver/plus/2326122174.jpg",
+    "PhotoId": 2326122174
+   }
+  },
+  {
+   "Key": 2326122190,
+   "Value": {
+    "Thumbnail": "https://trademe.tmcdn.co.nz/photoserver/thumb/2326122190.jpg",
+    "List": "https://trademe.tmcdn.co.nz/photoserver/lv2/2326122190.jpg",
+    "Medium": "https://trademe.tmcdn.co.nz/photoserver/med/2326122190.jpg",
+    "Gallery": "https://trademe.tmcdn.co.nz/photoserver/gv/2326122190.jpg",
+    "Large": "https://trademe.tmcdn.co.nz/photoserver/tq/2326122190.jpg",
+    "FullSize": "https://trademe.tmcdn.co.nz/photoserver/full/2326122190.jpg",
+    "PlusSize": "https://trademe.tmcdn.co.nz/photoserver/plus/2326122190.jpg",
+    "PhotoId": 2326122190
+   }
+  },
+  {
+   "Key": 2326162021,
+   "Value": {
+    "Thumbnail": "https://trademe.tmcdn.co.nz/photoserver/thumb/2326162021.jpg",
+    "List": "https://trademe.tmcdn.co.nz/photoserver/lv2/2326162021.jpg",
+    "Medium": "https://trademe.tmcdn.co.nz/photoserver/med/2326162021.jpg",
+    "Gallery": "https://trademe.tmcdn.co.nz/photoserver/gv/2326162021.jpg",
+    "Large": "https://trademe.tmcdn.co.nz/photoserver/tq/2326162021.jpg",
+    "FullSize": "https://trademe.tmcdn.co.nz/photoserver/full/2326162021.jpg",
+    "PlusSize": "https://trademe.tmcdn.co.nz/photoserver/plus/2326162021.jpg",
+    "PhotoId": 2326162021
+   }
+  },
+  {
+   "Key": 2326161780,
+   "Value": {
+    "Thumbnail": "https://trademe.tmcdn.co.nz/photoserver/thumb/2326161780.jpg",
+    "List": "https://trademe.tmcdn.co.nz/photoserver/lv2/2326161780.jpg",
+    "Medium": "https://trademe.tmcdn.co.nz/photoserver/med/2326161780.jpg",
+    "Gallery": "https://trademe.tmcdn.co.nz/photoserver/gv/2326161780.jpg",
+    "Large": "https://trademe.tmcdn.co.nz/photoserver/tq/2326161780.jpg",
+    "FullSize": "https://trademe.tmcdn.co.nz/photoserver/full/2326161780.jpg",
+    "PlusSize": "https://trademe.tmcdn.co.nz/photoserver/plus/2326161780.jpg",
+    "PhotoId": 2326161780
+   }
+  },
+  {
+   "Key": 2331831786,
+   "Value": {
+    "Thumbnail": "https://trademe.tmcdn.co.nz/photoserver/thumb/2331831786.jpg",
+    "List": "https://trademe.tmcdn.co.nz/photoserver/lv2/2331831786.jpg",
+    "Medium": "https://trademe.tmcdn.co.nz/photoserver/med/2331831786.jpg",
+    "Gallery": "https://trademe.tmcdn.co.nz/photoserver/gv/2331831786.jpg",
+    "Large": "https://trademe.tmcdn.co.nz/photoserver/tq/2331831786.jpg",
+    "FullSize": "https://trademe.tmcdn.co.nz/photoserver/full/2331831786.jpg",
+    "PlusSize": "https://trademe.tmcdn.co.nz/photoserver/plus/2331831786.jpg",
+    "PhotoId": 2331831786
+   }
+  },
+  {
+   "Key": 2331831787,
+   "Value": {
+    "Thumbnail": "https://trademe.tmcdn.co.nz/photoserver/thumb/2331831787.jpg",
+    "List": "https://trademe.tmcdn.co.nz/photoserver/lv2/2331831787.jpg",
+    "Medium": "https://trademe.tmcdn.co.nz/photoserver/med/2331831787.jpg",
+    "Gallery": "https://trademe.tmcdn.co.nz/photoserver/gv/2331831787.jpg",
+    "Large": "https://trademe.tmcdn.co.nz/photoserver/tq/2331831787.jpg",
+    "FullSize": "https://trademe.tmcdn.co.nz/photoserver/full/2331831787.jpg",
+    "PlusSize": "https://trademe.tmcdn.co.nz/photoserver/plus/2331831787.jpg",
+    "PhotoId": 2331831787
+   }
+  }
+ ],
+ "Attributes": [
+  {
+   "Name": "Memory",
+   "DisplayName": "Memory",
+   "Value": "16 to 31 GB",
+   "Type": 4,
+   "EncodedValue": "16to31GB",
+   "DisplayValue": "16 to 31 GB"
+  },
+  {
+   "Name": "Screen Size",
+   "DisplayName": "Screen Size",
+   "Value": "16\"",
+   "Type": 4,
+   "EncodedValue": "16\"",
+   "DisplayValue": "16\""
+  },
+  {
+   "Name": "Cores",
+   "DisplayName": "Cores",
+   "Value": "1",
+   "Type": 4,
+   "EncodedValue": "1",
+   "DisplayValue": "1"
+  }
+ ],
+ "Body": "2019 Apple MacBook Pro 16\" i7 2.6GHz/16GB/512GB SSD Gray A2141 w/ Adapter&amp;Cable",
+ "Member": {
+  "MemberId": 2401587,
+  "Nickname": "peter3991",
+  "DateAddressVerified": "/Date(0)/",
+  "DateJoined": "/Date(1201172400000)/",
+  "UniqueNegative": 0,
+  "UniquePositive": 13,
+  "FeedbackCount": 13,
+  "IsAddressVerified": false,
+  "Suburb": "Wellington City",
+  "Region": "Wellington",
+  "IsAuthenticated": true
+ }
+}

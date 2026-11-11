@@ -1,0 +1,17 @@
+[
+ {
+  "LocalityId": 2,
+  "Name": "Auckland",
+  "Districts": [
+   {
+    "DistrictId": 155,
+    "Name": "East Tamaki"
+   }
+  ]
+ },
+ {
+  "LocalityId": 1,
+  "Name": "Northland",
+  "Districts": []
+ }
+]

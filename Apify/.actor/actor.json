@@ -1,0 +1,64 @@
+{
+  "actorSpecification": 1,
+  "name": "trademe-marketplace-scraper",
+  "title": "Trade Me NZ Marketplace Scraper",
+  "description": "Scrapes Trade Me Marketplace listings through the public v1 JSON API. No browser, no login.",
+  "version": "1.0",
+  "buildTag": "latest",
+  "meta": {
+    "templateId": "project-empty"
+  },
+  "dockerfile": "../Dockerfile",
+  "input": "./INPUT_SCHEMA.json",
+  "storages": {
+    "dataset": {
+      "actorSpecification": 1,
+      "views": {
+        "listings": {
+          "title": "Listings",
+          "transformation": {
+            "fields": [
+              "listingId",
+              "title",
+              "price",
+              "priceDisplay",
+              "region",
+              "suburb",
+              "hasBuyNow",
+              "bidCount",
+              "closesAt",
+              "primaryImage",
+              "url"
+            ]
+          },
+          "display": {
+            "component": "table",
+            "properties": {
+              "title": { "label": "Title", "format": "text" },
+              "price": { "label": "Price", "format": "number" },
+              "region": { "label": "Region", "format": "text" },
+              "closesAt": { "label": "Closes", "format": "date" },
+              "primaryImage": { "label": "Image", "format": "image" }
+            }
+          }
+        },
+        "details": {
+          "title": "Details",
+          "transformation": {
+            "fields": [
+              "listingId",
+              "title",
+              "description",
+              "attributes",
+              "shipping",
+              "paymentMethods",
+              "photos",
+              "seller"
+            ]
+          },
+          "display": { "component": "table" }
+        }
+      }
+    }
+  }
+}

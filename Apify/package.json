@@ -1,0 +1,19 @@
+{
+  "name": "trademe-marketplace-scraper",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Scrape Trade Me NZ Marketplace listings via the public v1 JSON API",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "start": "node src/main.js",
+    "test": "node --test \"test/*.test.js\"",
+    "local": "node test/run-local.js"
+  },
+  "dependencies": {
+    "apify": "^3.2.6",
+    "undici": "^7.2.0"
+  }
+}

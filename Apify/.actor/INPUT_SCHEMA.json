@@ -1,0 +1,158 @@
+{
+  "actorSpecification": 1,
+  "name": "trademe-marketplace-scraper-input",
+  "title": "Trade Me NZ Marketplace Scraper input",
+  "description": "Search terms, filters and limits.",
+  "version": "1.0",
+  "schemaVersion": 1,
+  "properties": {
+    "queries": {
+      "title": "Search terms",
+      "type": "array",
+      "description": "Keywords to search for. Each term is walked to the end of its results, up to Max items.",
+      "editor": "stringList",
+      "prefill": ["iphone 13"],
+      "items": { "type": "string" }
+    },
+    "startUrls": {
+      "title": "Start URLs",
+      "type": "array",
+      "description": "Trade Me search, category or listing URLs. Listing URLs and bare IDs are always fetched in full.",
+      "editor": "requestListSources",
+      "prefill": [],
+      "items": {
+        "type": "object",
+        "properties": { "url": { "type": "string" } }
+      }
+    },
+    "category": {
+      "title": "Category ID",
+      "type": "string",
+      "description": "Optional Trade Me category number, e.g. 0344-0422-. Ignored when a URL already carries a category.",
+      "editor": "textfield"
+    },
+    "region": {
+      "title": "Region",
+      "type": "string",
+      "description": "Region name or ID, e.g. auckland.",
+      "editor": "textfield"
+    },
+    "district": {
+      "title": "District",
+      "type": "string",
+      "description": "District name or ID inside the region.",
+      "editor": "textfield"
+    },
+    "suburb": {
+      "title": "Suburb",
+      "type": "string",
+      "description": "Suburb name or ID inside the district.",
+      "editor": "textfield"
+    },
+    "minPrice": {
+      "title": "Minimum price (NZD)",
+      "type": "integer",
+      "minimum": 0
+    },
+    "maxPrice": {
+      "title": "Maximum price (NZD)",
+      "type": "integer",
+      "minimum": 0
+    },
+    "condition": {
+      "title": "Condition",
+      "type": "string",
+      "description": "Filter by item condition. Server-side.",
+      "editor": "select",
+      "default": "",
+      "enum": ["", "new", "used"],
+      "enumTitles": ["Any", "New", "Used"]
+    },
+    "shippingMethod": {
+      "title": "Shipping",
+      "type": "string",
+      "description": "Filter by shipping method. Server-side.",
+      "editor": "select",
+      "default": "",
+      "enum": ["", "free", "pickup"],
+      "enumTitles": ["Any", "Free shipping", "Pickup available"]
+    },
+    "buyNowOnly": {
+      "title": "Buy Now only",
+      "type": "boolean",
+      "description": "Keep only listings with a Buy Now price. Applied client-side (Trade Me ignores this filter server-side).",
+      "default": false
+    },
+    "sort": {
+      "title": "Sort order",
+      "type": "string",
+      "editor": "select",
+      "default": "default",
+      "enum": [
+        "default",
+        "featured",
+        "priceAsc",
+        "priceDesc",
+        "titleAsc",
+        "expiryAsc",
+        "expiryDesc",
+        "bidsMost",
+        "buyNowPrice",
+        "latest"
+      ],
+      "enumTitles": [
+        "Default",
+        "Featured first",
+        "Price ascending",
+        "Price descending",
+        "Title A–Z",
+        "Expiring soonest",
+        "Expiring latest",
+        "Most bids",
+        "Buy Now price",
+        "Newest listed"
+      ]
+    },
+    "maxItems": {
+      "title": "Max items",
+      "type": "integer",
+      "description": "Hard stop once this many listings are saved. 0 means unlimited.",
+      "default": 200,
+      "minimum": 0
+    },
+    "maxPagesPerQuery": {
+      "title": "Max pages per query",
+      "type": "integer",
+      "description": "Page cap per search. Trade Me itself stops at 190 pages of 500.",
+      "default": 190,
+      "minimum": 1,
+      "maximum": 190
+    },
+    "fetchDetails": {
+      "title": "Fetch full details",
+      "type": "boolean",
+      "description": "Fetch each listing's detail page for the description, full photo gallery and attributes. One extra request per listing.",
+      "default": true
+    },
+    "incrementalMode": {
+      "title": "Incremental mode",
+      "type": "boolean",
+      "description": "Remember the search and only emit new, changed or reappeared listings. Intended for scheduled runs.",
+      "default": false
+    },
+    "stateKey": {
+      "title": "State key",
+      "type": "string",
+      "description": "Baseline name for incremental mode. Leave empty to derive one from the search scope.",
+      "editor": "textfield"
+    },
+    "proxy": {
+      "title": "Proxy configuration",
+      "type": "object",
+      "description": "Datacenter proxy is sufficient. Switch to residential only if requests start being refused.",
+      "editor": "proxy",
+      "default": { "useApifyProxy": true, "apifyProxyGroups": ["SHADER"] }
+    }
+  },
+  "required": []
+}
