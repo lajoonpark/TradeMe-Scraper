@@ -6,12 +6,20 @@ import { LIMITS, REQUIRED_HEADERS, API_ORIGIN } from './constants.js';
  * caller can abort the whole run instead of retrying hundreds of times.
  */
 export class AuthError extends Error {
-  constructor(url, status, body) {
-    super(`Trade Me rejected the request (HTTP ${status}). The Referer gate has probably changed. ${url} :: ${body.slice(0, 200)}`);
+  constructor(url, status, body, kind = 'referer-gate') {
+    const hint =
+      kind === 'exit-ip-blocked'
+        ? 'Trade Me blocked the exit IP (security policy); use a residential proxy'
+        : 'The Referer gate has probably changed';
+    super(`${hint} (HTTP ${status}). ${url} :: ${String(body).slice(0, 200)}`);
     this.name = 'AuthError';
     this.status = status;
+    this.kind = kind;
   }
 }
+
+/** 403s that come from the exit IP being refused, not from the Referer gate. */
+const IP_BLOCK = /security policy|access denied/i;
 
 const agent = new Agent({
   connections: LIMITS.concurrency + 20,
@@ -23,6 +31,8 @@ const agent = new Agent({
 
 let dispatcher = agent;
 let proxyDispatcher = null;
+let proxyRefresher = null;
+let rotating = null;
 
 /** Points the client at an Apify Proxy URL, or back at the direct agent. */
 export function setProxy(proxyUrl) {
@@ -36,6 +46,39 @@ export function setProxy(proxyUrl) {
   } else {
     dispatcher = agent;
   }
+}
+
+/**
+ * Supplies a way to obtain a fresh proxy URL, which is how a blocked exit IP is
+ * rotated. Without it a 403 from the IP block stays fatal.
+ */
+export function setProxyRefresher(fn) {
+  proxyRefresher = typeof fn === 'function' ? fn : null;
+}
+
+/**
+ * Rotate to a new exit IP. Requests that were blocked at the same moment share
+ * a single rotation instead of each opening its own proxy session.
+ */
+async function rotateProxy() {
+  if (!proxyRefresher) return false;
+  if (!rotating) {
+    rotating = (async () => {
+      try {
+        const url = await proxyRefresher();
+        if (!url) return false;
+        setProxy(url);
+        return true;
+      } catch {
+        return false;
+      }
+    })();
+    const settle = () => {
+      rotating = null;
+    };
+    rotating.then(settle, settle);
+  }
+  return rotating;
 }
 
 /** Counting semaphore — bounds in-flight requests without a queue dependency. */
@@ -103,6 +146,7 @@ async function getOnce(target, signal) {
     if (signal?.aborted) throw signal.reason ?? new Error('aborted');
 
     let res;
+    let body;
     try {
       res = await request(target, {
         method: 'GET',
@@ -112,9 +156,13 @@ async function getOnce(target, signal) {
         headers: { ...REQUIRED_HEADERS },
         signal,
       });
+      // Reading the body is where a residential proxy usually drops the
+      // connection ("other side closed"), so it has to sit inside the retry —
+      // otherwise one dropped body kills the whole run.
+      body = await res.body.text();
     } catch (error) {
       if (signal?.aborted) throw signal.reason ?? error;
-      if (error.name === 'AbortError') throw error;
+      if (error?.name === 'AbortError') throw error;
       lastError = error;
       if (attempt === LIMITS.retries) break;
       await sleep(backoffMs(attempt));
@@ -122,7 +170,6 @@ async function getOnce(target, signal) {
     }
 
     const status = res.statusCode;
-    const body = await res.body.text();
 
     if (status === 200) {
       try {
@@ -135,9 +182,18 @@ async function getOnce(target, signal) {
       }
     }
 
-    if (status === 401 || status === 403) throw new AuthError(target, status, body);
-
     if (status === 404) return null;
+
+    if (status === 401 || status === 403) {
+      const blocked = status === 403 && IP_BLOCK.test(body);
+      // A blocked exit IP is worth retrying on a fresh proxy session; a closed
+      // Referer gate is not.
+      if (blocked && attempt < LIMITS.retries && (await rotateProxy())) {
+        await sleep(backoffMs(0));
+        continue;
+      }
+      throw new AuthError(target, status, body, blocked ? 'exit-ip-blocked' : 'referer-gate');
+    }
 
     if (!RETRY_STATUS.has(status)) {
       throw new Error(`Unexpected HTTP ${status} from ${target}: ${body.slice(0, 160)}`);

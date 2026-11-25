@@ -15,6 +15,12 @@ const DEFAULTS = {
   shippingMethod: 'any',
 };
 
+/** Input fields that define *what* is scraped, as opposed to how hard. */
+const SCOPE_FIELDS = ['category', 'region', 'district', 'suburb', 'minPrice', 'maxPrice', 'condition', 'shippingMethod', 'sort'];
+
+/** How long a listing stays in the incremental baseline. */
+const STATE_TTL_DAYS = 45;
+
 function client(semaphore) {
   return {
     get: (path, options) => getJson(path, { ...options, semaphore }),
@@ -67,6 +73,54 @@ function collectDescriptors(input) {
   return dedupeDescriptors(descriptors);
 }
 
+const hash = (value) => createHash('sha1').update(value).digest('hex');
+
+/**
+ * The baseline is keyed by the *scope* of the search only. Page size, detail
+ * fetching and other run knobs are deliberately excluded: changing one of them
+ * used to move the key, reset the baseline and re-announce every listing.
+ */
+function stateAddress(input, descriptors) {
+  const scope = descriptors.map((descriptor) =>
+    descriptor.kind === 'listing'
+      ? { kind: 'listing', listingId: descriptor.listingId }
+      : {
+          kind: 'search',
+          searchString: descriptor.searchString,
+          categorySegments: descriptor.categorySegments,
+          params: descriptor.params,
+        },
+  );
+  const narrowed = {};
+  for (const name of SCOPE_FIELDS) {
+    const value = input[name];
+    if (value !== undefined && value !== null && value !== '') narrowed[name] = value;
+  }
+  const key = input.stateKey
+    ? `key:${input.stateKey}`
+    : `scope:${JSON.stringify(scope)}${JSON.stringify(narrowed)}`;
+  // Older builds hashed the whole input. Keep that address readable once so a
+  // deploy carries the existing baseline over instead of re-sending everything.
+  const legacy = hash(
+    input.stateKey || JSON.stringify(descriptors) + JSON.stringify({ ...input, stateKey: undefined, proxy: undefined }),
+  );
+  return { current: `state-${hash(key)}`, legacy: `state-${legacy}` };
+}
+
+/** Drops baseline entries that have not been seen for a while. */
+function pruneState(prior) {
+  const cutoff = Date.now() - STATE_TTL_DAYS * 24 * 60 * 60 * 1000;
+  let removed = 0;
+  for (const [listingId, entry] of Object.entries(prior)) {
+    const seen = Date.parse(entry?.lastSeenAt ?? entry?.firstSeenAt ?? '');
+    if (!Number.isFinite(seen) || seen < cutoff) {
+      delete prior[listingId];
+      removed += 1;
+    }
+  }
+  return removed;
+}
+
 export async function run(rawInput, { pushData, setStatusMessage, proxyUrl } = {}) {
   const input = { ...DEFAULTS, ...(rawInput || {}) };
   const maxItems = Number(input.maxItems) > 0 ? Number(input.maxItems) : Infinity;
@@ -92,18 +146,40 @@ export async function run(rawInput, { pushData, setStatusMessage, proxyUrl } = {
   let stateStore = null;
   let stateAddr = null;
   let prior = {};
+  let stateDirty = false;
   let skippedUnchanged = 0;
 
+  // Saved after every batch as well as at the end, so a run that dies partway
+  // still remembers what it already announced.
+  const persistState = async () => {
+    if (!stateStore || !stateDirty) return;
+    stateDirty = false;
+    pruneState(prior);
+    try {
+      await stateStore.setValue(stateAddr, prior);
+    } catch (error) {
+      stateDirty = true;
+      log.warning(`Could not save incremental state: ${error.message}`);
+    }
+  };
+
   if (incremental) {
-    const scope = createHash('sha1')
-      .update(input.stateKey || JSON.stringify(descriptors) + JSON.stringify({ ...input, stateKey: undefined, proxy: undefined }))
-      .digest('hex');
-    stateAddr = `state-${scope}`;
+    const address = stateAddress(input, descriptors);
+    stateAddr = address.current;
     try {
       stateStore = await Actor.openKeyValueStore('trademe-state');
-      prior = (await stateStore.getValue(stateAddr)) || {};
+      prior = (await stateStore.getValue(address.current)) || {};
+      if (!Object.keys(prior).length && address.legacy !== address.current) {
+        const carried = (await stateStore.getValue(address.legacy)) || {};
+        if (Object.keys(carried).length) {
+          prior = carried;
+          stateDirty = true;
+          log.info(`Carried ${Object.keys(carried).length} listings over from the previous baseline key.`);
+        }
+      }
     } catch (error) {
       log.warning(`Incremental state unavailable (${error.message}); behaving like a normal run.`);
+      stateStore = null;
     }
   }
 
@@ -118,12 +194,25 @@ export async function run(rawInput, { pushData, setStatusMessage, proxyUrl } = {
   let skippedDuplicate = 0;
   let batch = [];
 
+  // Baseline entries for records that are queued but not yet pushed.
+  const pending = new Map();
+
   const flush = async (force = false) => {
     if (!batch.length) return;
     if (!force && batch.length < LIMITS.pushBatch) return;
     const items = batch;
     batch = [];
     await pushData(items);
+    // The baseline only advances for records that really reached the dataset,
+    // so a failed push is retried next run instead of being lost.
+    for (const item of items) {
+      const entry = pending.get(item.listingId);
+      if (!entry) continue;
+      prior[item.listingId] = entry;
+      pending.delete(item.listingId);
+      stateDirty = true;
+    }
+    await persistState();
   };
 
   const stop = () => {
@@ -163,7 +252,7 @@ export async function run(rawInput, { pushData, setStatusMessage, proxyUrl } = {
       record.changeType = previous ? 'UPDATED' : 'NEW';
       record.firstSeenAt = previous?.firstSeenAt ?? now;
       record.lastSeenAt = now;
-      prior[record.listingId] = { fingerprint: digest, firstSeenAt: record.firstSeenAt, lastSeenAt: now };
+      pending.set(record.listingId, { fingerprint: digest, firstSeenAt: record.firstSeenAt, lastSeenAt: now });
     }
 
     seen.add(record.listingId);
@@ -271,15 +360,22 @@ export async function run(rawInput, { pushData, setStatusMessage, proxyUrl } = {
 
   let failure = null;
   try {
-    await Promise.all(descriptors.map((descriptor) => processDescriptor(descriptor)));
-  } catch (error) {
-    if (!controller.signal.aborted) failure = error;
-  }
-
-  await flush(true);
-
-  if (stateStore) {
-    await stateStore.setValue(stateAddr, prior).catch((error) => log.warning(`Could not save incremental state: ${error.message}`));
+    // allSettled, not all: one failing query must not reject while its siblings
+    // are still pushing, which used to race the final flush.
+    const results = await Promise.allSettled(descriptors.map((descriptor) => processDescriptor(descriptor)));
+    const rejected = results.find((result) => result.status === 'rejected');
+    if (rejected) {
+      failure = rejected.reason;
+      if (!controller.signal.aborted) controller.abort(failure);
+    }
+  } finally {
+    try {
+      await flush(true);
+    } catch (error) {
+      failure = failure ?? error;
+    } finally {
+      await persistState();
+    }
   }
 
   const summary = `Scraped ${pushed} listings (scanned ${scanned}, ${skippedDuplicate} dupes, ${skippedFiltered} filtered, ${skippedUnchanged} unchanged)`;

@@ -87,7 +87,10 @@ async function rootCategoryIds(client, limit) {
 function priceBands(params) {
   return PRICE_BANDS.map(([min, max]) => {
     const next = { ...params, price_min: min };
+    // The open-ended top band must not inherit the caller's ceiling, or it can
+    // never match anything.
     if (max !== null) next.price_max = max;
+    else delete next.price_max;
     return next;
   });
 }

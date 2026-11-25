@@ -106,6 +106,7 @@ export function normalise(row, detail) {
   const price = hasBuyNow && buyNow ? buyNow : start || buyNow || null;
 
   const shipping = shipFrom(source.ShippingOptions);
+  const attributes = attributesFrom(source.Attributes);
 
   return {
     listingId,
@@ -136,9 +137,7 @@ export function normalise(row, detail) {
     closesAt: toIso(source.EndDate),
     quantityRemaining: num(source.QuantityRemaining),
     availableToBuy: clean(source.AvailableToBuy),
-    condition: attributesFrom(source.Attributes).Condition
-      ? attributesFrom(source.Attributes).Condition
-      : clean(source.Condition),
+    condition: attributes.Condition ?? clean(source.Condition) ?? null,
     shipping,
     paymentMethods: Array.isArray(source.PaymentMethods)
       ? source.PaymentMethods.map((method) => clean(method?.Name)).filter(Boolean)
@@ -146,7 +145,7 @@ export function normalise(row, detail) {
     photos: photosFrom(detail, row),
     primaryImage: clean(row?.PictureHref) || photosFrom(detail, row)[0] || null,
     description: clean(detail?.Body) || null,
-    attributes: detail ? attributesFrom(detail.Attributes) : {},
+    attributes: detail ? attributes : {},
     seller: sellerFrom(detail?.Member, source.MemberId ?? row?.MemberId),
     store: detail?.Store ? { name: clean(detail.Store.Name) } : null,
     changeType: null,
